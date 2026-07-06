@@ -73,8 +73,9 @@
 }
 
 .overview__years .year-btn:not(.year-btn--selected):hover {
-  border-color: var(--neutral-900);
-  background-color: var(--neutral-100);
+  border-color: var(--modus-wc-color-primary);
+  background-color: var(--modus-wc-color-primary);
+  color: var(--modus-wc-color-primary-content);
 }
 
 .overview__years .year-btn--selected {
