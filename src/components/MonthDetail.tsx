@@ -159,11 +159,11 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
         </div>
         {isReady && (
           <div className="detail__actions">
-            <ModusWcButton color="secondary" variant="outlined">
+            <ModusWcButton color="primary" variant="outlined">
               <ModusWcIcon decorative name="file_download" size="sm" />
               Export as CSV
             </ModusWcButton>
-            <ModusWcButton color="primary" variant="filled">
+            <ModusWcButton color="primary" variant="outlined">
               <ModusWcIcon decorative name="sync" size="sm" />
               Send to Spectrum
             </ModusWcButton>
