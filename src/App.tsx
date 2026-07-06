@@ -63,13 +63,14 @@ export default function App() {
   )
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
 
-  // Pick the first month that has data for the current tab + year.
-  const firstMonthWithData = useMemo(() => {
+  // Default to the most recent month that has data for the current tab + year
+  // (that's the one shown at the end of the four-month strip).
+  const defaultMonth = useMemo(() => {
     const months = summaries[status]
       .filter((s) => s.year === selectedYear)
       .map((s) => s.month)
       .sort((a, b) => a - b)
-    return months[0] ?? null
+    return months[months.length - 1] ?? null
   }, [summaries, status, selectedYear])
 
   // Keep the selected month valid whenever the tab/year changes.
@@ -77,8 +78,8 @@ export default function App() {
     const valid = summaries[status].some(
       (s) => s.year === selectedYear && s.month === selectedMonth,
     )
-    if (!valid) setSelectedMonth(firstMonthWithData)
-  }, [summaries, status, selectedYear, selectedMonth, firstMonthWithData])
+    if (!valid) setSelectedMonth(defaultMonth)
+  }, [summaries, status, selectedYear, selectedMonth, defaultMonth])
 
   const switchTab = (index: number) => {
     setActiveTab(index)

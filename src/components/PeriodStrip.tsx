@@ -34,12 +34,12 @@ export default function PeriodStrip({
     return map
   }, [summaries, selectedYear])
 
-  // Only show months that actually have expenses for this period/tab.
+  // Only show the four most recent months that have expenses for this tab.
   const months = useMemo(
     () =>
-      Array.from({ length: 12 }, (_, m) => m).filter((m) =>
-        summaryByMonth.has(m),
-      ),
+      Array.from({ length: 12 }, (_, m) => m)
+        .filter((m) => summaryByMonth.has(m))
+        .slice(-4),
     [summaryByMonth],
   )
 
