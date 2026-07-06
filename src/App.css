@@ -146,7 +146,8 @@
 
 .month-tile--selected .month-tile__card {
   border-color: var(--modus-wc-color-primary, #0063a3) !important;
-  box-shadow: 0 0 0 2px var(--modus-wc-color-primary, #0063a3);
+  border-width: 2px !important;
+  background-color: var(--primary-50, #e0f2fe) !important;
 }
 
 /* Neutral "Expense Summary" button (override the yellow secondary look). */
