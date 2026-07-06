@@ -440,6 +440,54 @@
   margin-bottom: 1.25rem;
 }
 
+/* ---- Export selection bar ---- */
+.export-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--warning-50, #fffbeb);
+  border: 1px solid var(--warning-200, #fde68a);
+  border-left: 4px solid var(--warning-500, #f59e0b);
+  border-radius: var(--radius-lg);
+  padding: 0.6rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.export-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.export-bar__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--warning-500, #f59e0b);
+}
+
+.export-bar__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--neutral-800, #262626);
+}
+
+.export-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.export-bar__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--neutral-700, #404040);
+}
+
 /* ---- Employee groups ---- */
 .employee-group {
   background: #fff;

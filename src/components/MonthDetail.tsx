@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ModusWcButton,
   ModusWcBadge,
@@ -6,7 +6,7 @@ import {
   ModusWcSelect,
   ModusWcDate,
   ModusWcTable,
-  ModusWcAlert,
+  ModusWcCheckbox,
 } from '@trimble-oss/moduswebcomponents-react'
 import {
   getExpensesForPeriod,
@@ -183,6 +183,56 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
     [filtered],
   )
 
+  // Row selection. Default to everything selected for the period so the export
+  // flow starts "all in", and reset whenever the period changes.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    setSelectedIds(new Set(allExpenses.map((e) => e.id)))
+  }, [allExpenses])
+
+  const displayedIds = useMemo(() => filtered.map((e) => e.id), [filtered])
+  const allDisplayedSelected =
+    displayedIds.length > 0 && displayedIds.every((id) => selectedIds.has(id))
+  const someDisplayedSelected = displayedIds.some((id) => selectedIds.has(id))
+
+  const selectedExpenses = useMemo(
+    () => filtered.filter((e) => selectedIds.has(e.id)),
+    [filtered, selectedIds],
+  )
+  const selectedEmployeeCount = useMemo(
+    () => new Set(selectedExpenses.map((e) => e.employeeCode)).size,
+    [selectedExpenses],
+  )
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allDisplayedSelected) {
+        displayedIds.forEach((id) => next.delete(id))
+      } else {
+        displayedIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const handleGroupSelection = (groupItems: Expense[], ids: string[]) => {
+    const groupIds = new Set(groupItems.map((e) => e.id))
+    const idSet = new Set(ids)
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      groupIds.forEach((id) => {
+        if (idSet.has(id)) next.add(id)
+        else next.delete(id)
+      })
+      // Avoid a state churn / re-emit loop when nothing actually changed.
+      if (next.size === prev.size && [...next].every((id) => prev.has(id))) {
+        return prev
+      }
+      return next
+    })
+  }
+
   const hasFilters = Boolean(
     employeeFilter ||
       departmentFilter ||
@@ -325,13 +375,34 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
         )}
       </div>
 
-      {isReady && (
-        <ModusWcAlert
-          variant="info"
-          icon="info"
-          alertTitle={`${allExpenses.length} expenses to be exported for ${monthLabel(month)} ${year}`}
-          customClass="detail__banner"
-        />
+      {isReady && groups.length > 0 && (
+        <div className="export-bar">
+          <div className="export-bar__left">
+            <ModusWcCheckbox
+              value={allDisplayedSelected}
+              indeterminate={someDisplayedSelected && !allDisplayedSelected}
+              inputTabIndex={0}
+              aria-label="Select all displayed expenses"
+              onInputChange={toggleSelectAll}
+            />
+            <span className="export-bar__dot" aria-hidden="true" />
+            <span className="export-bar__label">Expenses to be exported</span>
+          </div>
+          <div className="export-bar__right">
+            <span className="export-bar__stat">
+              Employees
+              <ModusWcBadge color="warning" variant="counter" size="sm">
+                {selectedEmployeeCount}
+              </ModusWcBadge>
+            </span>
+            <span className="export-bar__stat">
+              Expenses
+              <ModusWcBadge color="warning" variant="counter" size="sm">
+                {selectedExpenses.length}
+              </ModusWcBadge>
+            </span>
+          </div>
+        </div>
       )}
 
       {groups.length === 0 ? (
@@ -364,6 +435,13 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
                 density="compact"
                 hover
                 sortable
+                selectable={isReady ? 'multi' : 'none'}
+                selectedRowIds={group.items
+                  .map((e) => e.id)
+                  .filter((id) => selectedIds.has(id))}
+                onRowSelectionChange={(e) =>
+                  handleGroupSelection(group.items, e.detail.selectedRowIds)
+                }
               />
             </section>
           )
