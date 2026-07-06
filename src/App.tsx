@@ -3,9 +3,11 @@ import {
   ModusWcNavbar,
   ModusWcTabs,
   ModusWcIcon,
+  ModusWcButton,
 } from '@trimble-oss/moduswebcomponents-react'
 import PeriodOverview from './components/PeriodOverview'
 import MonthDetail from './components/MonthDetail'
+import SideNav from './components/SideNav'
 import { getAvailableYears, type ExportStatus } from './data/expenses'
 import './App.css'
 
@@ -29,7 +31,7 @@ const NAV_VISIBILITY = {
   apps: true,
   help: true,
   logo: false,
-  mainMenu: false,
+  mainMenu: true,
   notifications: true,
   search: false,
   searchInput: false,
@@ -74,44 +76,53 @@ export default function App() {
         </div>
       </ModusWcNavbar>
 
-      <main className="page">
-        <header className="page__header">
-          <div>
+      <div className="app__body">
+        <SideNav />
+
+        <main className="page">
+          <header className="page__header">
             <h1 className="page__title">Export Expenses</h1>
-            <p className="page__lede">
-              Review pending expenses by period, then export them without loading
-              everything at once.
-            </p>
+            <ModusWcButton
+              color="secondary"
+              variant="outlined"
+              size="sm"
+              customClass="summary-btn"
+            >
+              <ModusWcIcon decorative name="clipboard" size="sm" />
+              Expense Summary
+            </ModusWcButton>
+          </header>
+
+          <div className="page__content">
+            <div className="page__tabs">
+              <ModusWcTabs
+                tabs={TABS.map((t) => ({ label: t.label }))}
+                activeTabIndex={activeTab}
+                tabStyle="boxed"
+                onTabChange={(e) => switchTab(e.detail.newTab)}
+              />
+            </div>
+
+            {view.name === 'overview' ? (
+              <PeriodOverview
+                status={status}
+                selectedYear={selectedYears[status]}
+                onSelectYear={(year) =>
+                  setSelectedYears((prev) => ({ ...prev, [status]: year }))
+                }
+                onOpenPeriod={(year, month) => setView({ name: 'detail', year, month })}
+              />
+            ) : (
+              <MonthDetail
+                status={status}
+                year={view.year}
+                month={view.month}
+                onBack={() => setView({ name: 'overview' })}
+              />
+            )}
           </div>
-        </header>
-
-        <div className="page__tabs">
-          <ModusWcTabs
-            tabs={TABS.map((t) => ({ label: t.label }))}
-            activeTabIndex={activeTab}
-            tabStyle="boxed"
-            onTabChange={(e) => switchTab(e.detail.newTab)}
-          />
-        </div>
-
-        {view.name === 'overview' ? (
-          <PeriodOverview
-            status={status}
-            selectedYear={selectedYears[status]}
-            onSelectYear={(year) =>
-              setSelectedYears((prev) => ({ ...prev, [status]: year }))
-            }
-            onOpenPeriod={(year, month) => setView({ name: 'detail', year, month })}
-          />
-        ) : (
-          <MonthDetail
-            status={status}
-            year={view.year}
-            month={view.month}
-            onBack={() => setView({ name: 'overview' })}
-          />
-        )}
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
