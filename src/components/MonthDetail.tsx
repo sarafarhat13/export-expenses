@@ -4,6 +4,7 @@ import {
   ModusWcBadge,
   ModusWcIcon,
   ModusWcSelect,
+  ModusWcDate,
   ModusWcTable,
   ModusWcAlert,
 } from '@trimble-oss/moduswebcomponents-react'
@@ -74,6 +75,17 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
   const [employeeFilter, setEmployeeFilter] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
+
+  // Constrain the calendar to the selected month (invoice dates only fall here).
+  const monthBounds = useMemo(() => {
+    const mm = String(month + 1).padStart(2, '0')
+    const lastDay = new Date(year, month + 1, 0).getDate()
+    return {
+      min: `${year}-${mm}-01`,
+      max: `${year}-${mm}-${String(lastDay).padStart(2, '0')}`,
+    }
+  }, [year, month])
 
   const buildOptions = (values: string[], placeholder: string): SelectOption[] => [
     { label: placeholder, value: '' },
@@ -106,9 +118,10 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
           return false
         if (departmentFilter && e.department !== departmentFilter) return false
         if (categoryFilter && e.category !== categoryFilter) return false
+        if (dateFilter && e.date !== dateFilter) return false
         return true
       }),
-    [allExpenses, employeeFilter, departmentFilter, categoryFilter],
+    [allExpenses, employeeFilter, departmentFilter, categoryFilter, dateFilter],
   )
 
   const groups = useMemo(() => {
@@ -130,7 +143,9 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
     [filtered],
   )
 
-  const hasFilters = Boolean(employeeFilter || departmentFilter || categoryFilter)
+  const hasFilters = Boolean(
+    employeeFilter || departmentFilter || categoryFilter || dateFilter,
+  )
   const isReady = status === 'ready'
 
   return (
@@ -193,6 +208,19 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
           value={categoryFilter}
           onInputChange={(e) => setCategoryFilter(e.target.value)}
         />
+        <ModusWcDate
+          label="Date"
+          size="sm"
+          format="yyyy-mm-dd"
+          min={monthBounds.min}
+          max={monthBounds.max}
+          value={dateFilter}
+          onInputChange={(e) => {
+            // modus-wc-date emits the ISO value on the event detail, not the host.
+            const detail = e.detail as unknown as { target?: { value?: string } }
+            setDateFilter(detail?.target?.value ?? '')
+          }}
+        />
         {hasFilters && (
           <ModusWcButton
             color="secondary"
@@ -203,6 +231,7 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
               setEmployeeFilter('')
               setDepartmentFilter('')
               setCategoryFilter('')
+              setDateFilter('')
             }}
           >
             <ModusWcIcon decorative name="close" size="xs" />
