@@ -75,6 +75,10 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
   const [employeeFilter, setEmployeeFilter] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [jobFilter, setJobFilter] = useState('')
+  const [phaseFilter, setPhaseFilter] = useState('')
+  const [payTypeFilter, setPayTypeFilter] = useState('')
+  const [creditCardFilter, setCreditCardFilter] = useState('')
   const [dateFilter, setDateFilter] = useState('')
 
   // Constrain the calendar to the selected month (invoice dates only fall here).
@@ -98,18 +102,39 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
     () =>
       buildOptions(
         allExpenses.map((e) => `${e.employeeCode} - ${e.employeeName}`),
-        'All employees',
+        'Filter by Employee',
       ),
     [allExpenses],
   )
   const departmentOptions = useMemo(
-    () => buildOptions(allExpenses.map((e) => e.department), 'All departments'),
+    () => buildOptions(allExpenses.map((e) => e.department), 'Filter by Department'),
     [allExpenses],
   )
   const categoryOptions = useMemo(
-    () => buildOptions(allExpenses.map((e) => e.category), 'All categories'),
+    () =>
+      buildOptions(
+        allExpenses.map((e) => `${e.category} (${e.glCode})`),
+        'Filter by Category / GL Code',
+      ),
     [allExpenses],
   )
+  const jobOptions = useMemo(
+    () => buildOptions(allExpenses.map((e) => e.job), 'Filter by Job'),
+    [allExpenses],
+  )
+  const phaseOptions = useMemo(
+    () => buildOptions(allExpenses.map((e) => e.phase), 'Filter by Phase'),
+    [allExpenses],
+  )
+  const payTypeOptions = useMemo(
+    () => buildOptions(allExpenses.map((e) => e.payType), 'Filter by Pay Type'),
+    [allExpenses],
+  )
+  const creditCardOptions: SelectOption[] = [
+    { label: 'Filter by Credit Card', value: '' },
+    { label: 'Yes', value: 'yes' },
+    { label: 'No', value: 'no' },
+  ]
 
   const filtered = useMemo(
     () =>
@@ -117,11 +142,26 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
         if (employeeFilter && `${e.employeeCode} - ${e.employeeName}` !== employeeFilter)
           return false
         if (departmentFilter && e.department !== departmentFilter) return false
-        if (categoryFilter && e.category !== categoryFilter) return false
+        if (categoryFilter && `${e.category} (${e.glCode})` !== categoryFilter) return false
+        if (jobFilter && e.job !== jobFilter) return false
+        if (phaseFilter && e.phase !== phaseFilter) return false
+        if (payTypeFilter && e.payType !== payTypeFilter) return false
+        if (creditCardFilter && (e.creditCard ? 'yes' : 'no') !== creditCardFilter)
+          return false
         if (dateFilter && e.date !== dateFilter) return false
         return true
       }),
-    [allExpenses, employeeFilter, departmentFilter, categoryFilter, dateFilter],
+    [
+      allExpenses,
+      employeeFilter,
+      departmentFilter,
+      categoryFilter,
+      jobFilter,
+      phaseFilter,
+      payTypeFilter,
+      creditCardFilter,
+      dateFilter,
+    ],
   )
 
   const groups = useMemo(() => {
@@ -144,8 +184,26 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
   )
 
   const hasFilters = Boolean(
-    employeeFilter || departmentFilter || categoryFilter || dateFilter,
+    employeeFilter ||
+      departmentFilter ||
+      categoryFilter ||
+      jobFilter ||
+      phaseFilter ||
+      payTypeFilter ||
+      creditCardFilter ||
+      dateFilter,
   )
+
+  const clearFilters = () => {
+    setEmployeeFilter('')
+    setDepartmentFilter('')
+    setCategoryFilter('')
+    setJobFilter('')
+    setPhaseFilter('')
+    setPayTypeFilter('')
+    setCreditCardFilter('')
+    setDateFilter('')
+  }
   const isReady = status === 'ready'
 
   return (
@@ -187,56 +245,83 @@ export default function MonthDetail({ status, year, month, onBack }: Props) {
       </div>
 
       <div className="detail__filters">
-        <ModusWcSelect
-          label="Employee"
-          size="sm"
-          options={employeeOptions}
-          value={employeeFilter}
-          onInputChange={(e) => setEmployeeFilter(e.target.value)}
-        />
-        <ModusWcSelect
-          label="Department"
-          size="sm"
-          options={departmentOptions}
-          value={departmentFilter}
-          onInputChange={(e) => setDepartmentFilter(e.target.value)}
-        />
-        <ModusWcSelect
-          label="Category"
-          size="sm"
-          options={categoryOptions}
-          value={categoryFilter}
-          onInputChange={(e) => setCategoryFilter(e.target.value)}
-        />
-        <ModusWcDate
-          label="Date"
-          size="sm"
-          format="yyyy-mm-dd"
-          min={monthBounds.min}
-          max={monthBounds.max}
-          value={dateFilter}
-          onInputChange={(e) => {
-            // modus-wc-date emits the ISO value on the event detail, not the host.
-            const detail = e.detail as unknown as { target?: { value?: string } }
-            setDateFilter(detail?.target?.value ?? '')
-          }}
-        />
-        {hasFilters && (
-          <ModusWcButton
-            color="secondary"
-            variant="borderless"
+        <div className="detail__filter-grid">
+          <ModusWcDate
+            label="Date"
             size="sm"
-            customClass="detail__clear"
-            onButtonClick={() => {
-              setEmployeeFilter('')
-              setDepartmentFilter('')
-              setCategoryFilter('')
-              setDateFilter('')
+            format="yyyy-mm-dd"
+            min={monthBounds.min}
+            max={monthBounds.max}
+            value={dateFilter}
+            onInputChange={(e) => {
+              // modus-wc-date emits the ISO value on the event detail, not the host.
+              const detail = e.detail as unknown as { target?: { value?: string } }
+              setDateFilter(detail?.target?.value ?? '')
             }}
-          >
-            <ModusWcIcon decorative name="close" size="xs" />
-            Clear filters
-          </ModusWcButton>
+          />
+          <ModusWcSelect
+            label="Employee"
+            size="sm"
+            options={employeeOptions}
+            value={employeeFilter}
+            onInputChange={(e) => setEmployeeFilter(e.target.value)}
+          />
+          <ModusWcSelect
+            label="Job"
+            size="sm"
+            options={jobOptions}
+            value={jobFilter}
+            onInputChange={(e) => setJobFilter(e.target.value)}
+          />
+          <ModusWcSelect
+            label="Phase"
+            size="sm"
+            options={phaseOptions}
+            value={phaseFilter}
+            onInputChange={(e) => setPhaseFilter(e.target.value)}
+          />
+          <ModusWcSelect
+            label="Category / GL Code"
+            size="sm"
+            options={categoryOptions}
+            value={categoryFilter}
+            onInputChange={(e) => setCategoryFilter(e.target.value)}
+          />
+          <ModusWcSelect
+            label="Department"
+            size="sm"
+            options={departmentOptions}
+            value={departmentFilter}
+            onInputChange={(e) => setDepartmentFilter(e.target.value)}
+          />
+          <ModusWcSelect
+            label="Pay Type"
+            size="sm"
+            options={payTypeOptions}
+            value={payTypeFilter}
+            onInputChange={(e) => setPayTypeFilter(e.target.value)}
+          />
+          <ModusWcSelect
+            label="Credit Card"
+            size="sm"
+            options={creditCardOptions}
+            value={creditCardFilter}
+            onInputChange={(e) => setCreditCardFilter(e.target.value)}
+          />
+        </div>
+        {hasFilters && (
+          <div className="detail__filter-actions">
+            <ModusWcButton
+              color="secondary"
+              variant="borderless"
+              size="sm"
+              customClass="detail__clear"
+              onButtonClick={clearFilters}
+            >
+              <ModusWcIcon decorative name="close" size="xs" />
+              Clear filters
+            </ModusWcButton>
+          </div>
         )}
       </div>
 
