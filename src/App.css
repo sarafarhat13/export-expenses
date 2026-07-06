@@ -103,11 +103,50 @@
   border-bottom: 1px solid var(--neutral-200);
 }
 
+.page__header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--neutral-700);
+}
+
 .page__title {
   font-size: 1.375rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--neutral-900);
+}
+
+/* ---- Period strip (year selector + horizontal month tiles) ---- */
+.period-strip {
+  margin-bottom: 1.5rem;
+}
+
+.period-strip__years {
+  margin-bottom: 1rem;
+}
+
+.period-strip__tiles {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.period-strip__tiles .month-tile {
+  flex: 1 1 0;
+  min-width: 210px;
+}
+
+.period-strip__empty {
+  color: var(--neutral-500);
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+.month-tile--selected .month-tile__card {
+  border-color: var(--modus-wc-color-primary, #0063a3) !important;
+  box-shadow: 0 0 0 2px var(--modus-wc-color-primary, #0063a3);
 }
 
 /* Neutral "Expense Summary" button (override the yellow secondary look). */
@@ -145,21 +184,21 @@
 }
 
 /* Year selector: dark grey borders, blue for the selected year. */
-.overview__years .year-btn {
+.period-strip__years .year-btn {
   border-color: var(--neutral-700);
 }
 
-.overview__years .year-btn:not(.year-btn--selected) {
+.period-strip__years .year-btn:not(.year-btn--selected) {
   color: var(--neutral-700);
 }
 
-.overview__years .year-btn:not(.year-btn--selected):hover {
+.period-strip__years .year-btn:not(.year-btn--selected):hover {
   border-color: var(--modus-wc-color-primary);
   background-color: var(--modus-wc-color-primary);
   color: var(--modus-wc-color-primary-content);
 }
 
-.overview__years .year-btn--selected {
+.period-strip__years .year-btn--selected {
   border-color: var(--modus-wc-color-primary);
   background-color: var(--modus-wc-color-primary);
   color: var(--modus-wc-color-primary-content);
@@ -502,25 +541,46 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   padding: 0.75rem 1rem;
   background: var(--neutral-50);
+  border: none;
   border-bottom: 1px solid var(--neutral-200);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.employee-group__header:hover {
+  background: var(--neutral-100);
 }
 
 .employee-group__id {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--neutral-700);
+  color: var(--neutral-800);
 }
 
 .employee-group__name {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .employee-group__total {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--neutral-200);
   font-size: 0.85rem;
-  color: var(--neutral-600);
+  font-weight: 700;
+  color: var(--primary-700);
+}
+
+.employee-group__total span {
+  font-size: 0.95rem;
 }
 
 .detail__grandtotal {
@@ -550,4 +610,162 @@
   .overview__stats {
     justify-content: space-between;
   }
+}
+
+/* ---- Single-page expense panel ---- */
+.panel__filters {
+  background: #fff;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.panel__filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.panel__filter-grid modus-wc-select,
+.panel__filter-grid modus-wc-date {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .panel__filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .panel__filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel__filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.panel__export-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* ---- Custom expense table ---- */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.xtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.xtable thead th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  background: var(--neutral-50);
+  color: var(--neutral-500);
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.xcell {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--neutral-100);
+  color: var(--neutral-700);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.xcell--num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--neutral-900);
+}
+
+.xcell--check {
+  width: 40px;
+  text-align: center;
+}
+
+.xcell--invoice {
+  min-width: 160px;
+}
+
+.xrow:hover {
+  background: var(--neutral-50);
+}
+
+.xrow--selected {
+  background: var(--primary-50, #eff8ff);
+}
+
+.invoice-input,
+.apply-input {
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-md, 6px);
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--neutral-900);
+  width: 100%;
+  min-width: 130px;
+}
+
+.invoice-input:focus,
+.apply-input:focus {
+  outline: none;
+  border-color: var(--modus-wc-color-primary, #0063a3);
+  box-shadow: 0 0 0 3px rgba(0, 99, 163, 0.12);
+}
+
+/* ---- Expense sub-groups (individual / expense report) ---- */
+.subgroup__cell {
+  padding: 0;
+}
+
+.subgroup__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--neutral-50);
+  border-top: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--neutral-200);
+  flex-wrap: wrap;
+}
+
+.subgroup__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--primary-700, #075985);
+}
+
+.subgroup__apply {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subgroup__apply .apply-input {
+  min-width: 190px;
 }

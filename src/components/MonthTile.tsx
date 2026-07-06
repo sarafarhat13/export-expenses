@@ -7,10 +7,19 @@ interface Props {
   month: number
   monthLabel: string
   summary?: PeriodSummary
+  selected?: boolean
   onOpen: (year: number, month: number) => void
 }
 
-export default function MonthTile({ status, year, month, monthLabel, summary, onOpen }: Props) {
+export default function MonthTile({
+  status,
+  year,
+  month,
+  monthLabel,
+  summary,
+  selected,
+  onOpen,
+}: Props) {
   const count = summary?.expenseCount ?? 0
   const hasExpenses = count > 0
   const verb = status === 'ready' ? 'ready' : 'exported'
@@ -21,10 +30,13 @@ export default function MonthTile({ status, year, month, monthLabel, summary, on
 
   return (
     <div
-      className={`month-tile ${hasExpenses ? 'month-tile--active' : 'month-tile--empty'}`}
+      className={`month-tile ${hasExpenses ? 'month-tile--active' : 'month-tile--empty'} ${
+        selected ? 'month-tile--selected' : ''
+      }`}
       role="button"
       tabIndex={hasExpenses ? 0 : -1}
       aria-disabled={!hasExpenses}
+      aria-pressed={selected}
       aria-label={`${monthLabel} ${year}: ${count} expenses ${verb}`}
       onClick={open}
       onKeyDown={(e) => {

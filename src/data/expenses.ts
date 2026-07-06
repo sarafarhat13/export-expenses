@@ -14,6 +14,7 @@ export interface Expense {
   employeeCode: string
   employeeName: string
   department: string
+  costCenter: string
   job: string
   phase: string
   payType: string
@@ -27,6 +28,8 @@ export interface Expense {
   status: ExportStatus
   /** Present when the expense belongs to a multi-line expense report. */
   reportId?: string
+  /** Human-readable title of the parent expense report, when applicable. */
+  reportTitle?: string
 }
 
 export interface PeriodSummary {
@@ -65,6 +68,23 @@ const EMPLOYEES = [
 const JOBS = ['CONSTR', 'TRAVEL', 'CLIENT', 'ADMIN', 'SHOP']
 const PHASES = ['00100', '02000', '04500', '01000', '03200']
 const PAY_TYPES = ['M', 'E', 'C']
+const COST_CENTERS = [
+  '100 - Operations',
+  '200 - Field Services',
+  '300 - Office',
+  '400 - Fleet',
+  '500 - Safety',
+]
+const REPORT_TITLES = [
+  'Q4 Field Operations',
+  'Sales & Marketing Q4',
+  'Equipment & Tools',
+  'Site Travel',
+  'Client Onboarding',
+  'Monthly Supplies',
+  'Winter Maintenance',
+  'Project Kickoff',
+]
 const VENDORS = [
   'TechSupply Co', 'BuildPro Equipment', 'The Oak Restaurant', 'Northgate Fuel',
   'City Hardware', 'Summit Lodging', 'Rapid Rentals', 'Blue Sky Airlines',
@@ -96,13 +116,20 @@ function pick<T>(rng: () => number, arr: T[]): T {
   return arr[Math.floor(rng() * arr.length)]
 }
 
+interface Bucket {
+  reportId: string | null
+  title: string | null
+  size: number
+}
+
 function buildExpenses(): Expense[] {
   const rng = makeRng(20250706)
   const expenses: Expense[] = []
   let counter = 0
+  let reportCounter = 0
 
-  // Generate across three years. Recent months (current year) are all "ready";
-  // older months are mostly "exported" so both tabs have realistic content.
+  // Generate across three years so both tabs have realistic content. Older
+  // periods are "exported"; recent periods are "ready".
   const years = [2024, 2025, 2026]
 
   for (const year of years) {
@@ -113,45 +140,78 @@ function buildExpenses(): Expense[] {
       if (roll < 0.18) count = 0
       else if (roll < 0.5) count = 2 + Math.floor(rng() * 4)
       else count = 6 + Math.floor(rng() * 12)
+      if (count === 0) continue
 
-      for (let i = 0; i < count; i++) {
-        const emp = pick(rng, EMPLOYEES)
-        const cat = pick(rng, CATEGORIES)
-        const day = 1 + Math.floor(rng() * 27)
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const exportedPeriod =
+        year < 2025 || (year === 2025 && month < 6)
+      const status: ExportStatus = exportedPeriod ? 'exported' : 'ready'
 
-        // Roughly a third of expenses roll up into a shared expense report.
-        const inReport = rng() < 0.35
-        const reportId = inReport
-          ? `RPT-${1000 + Math.floor(rng() * 8000)}`
-          : undefined
+      // Spread the month's expenses across a subset of employees.
+      const empPool = [...EMPLOYEES].sort(() => rng() - 0.5)
+      const numEmp = Math.max(1, Math.min(empPool.length, Math.min(count, 2 + Math.floor(rng() * 5))))
+      const chosen = empPool.slice(0, numEmp)
 
-        const exported =
-          year < 2025 || (year === 2025 && month < 9) ? rng() < 0.85 : false
-
-        counter += 1
-        expenses.push({
-          id: `EXP-${counter}`,
-          date: dateStr,
-          employeeCode: emp.code,
-          employeeName: emp.name,
-          department: emp.department,
-          job: pick(rng, JOBS),
-          phase: pick(rng, PHASES),
-          payType: pick(rng, PAY_TYPES),
-          creditCard: rng() < 0.5,
-          vendor: pick(rng, VENDORS),
-          category: cat.name,
-          glCode: cat.gl,
-          invoiceNumber: reportId
-            ? `${reportId}-INV`
-            : `INV${100000 + Math.floor(rng() * 900000)}`,
-          totalCost: Math.round((15 + rng() * 900) * 100) / 100,
-          comment: pick(rng, COMMENTS),
-          status: exported ? 'exported' : 'ready',
-          reportId,
-        })
+      const alloc = new Array<number>(numEmp).fill(1)
+      let remaining = count - numEmp
+      while (remaining > 0) {
+        alloc[Math.floor(rng() * numEmp)] += 1
+        remaining -= 1
       }
+
+      chosen.forEach((emp, ei) => {
+        // Break this employee's expenses into individual lines and 2-3 line
+        // expense reports so the UI can group them.
+        let left = alloc[ei]
+        const buckets: Bucket[] = []
+        while (left > 0) {
+          if (left >= 2 && rng() < 0.45) {
+            const size = Math.min(left, 2 + Math.floor(rng() * 2))
+            reportCounter += 1
+            buckets.push({
+              reportId: `RPT-${4500 + reportCounter}`,
+              title: pick(rng, REPORT_TITLES),
+              size,
+            })
+            left -= size
+          } else {
+            buckets.push({ reportId: null, title: null, size: 1 })
+            left -= 1
+          }
+        }
+
+        for (const bucket of buckets) {
+          for (let k = 0; k < bucket.size; k++) {
+            const cat = pick(rng, CATEGORIES)
+            const day = 1 + Math.floor(rng() * 27)
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+
+            counter += 1
+            expenses.push({
+              id: `EXP-${counter}`,
+              date: dateStr,
+              employeeCode: emp.code,
+              employeeName: emp.name,
+              department: emp.department,
+              costCenter: pick(rng, COST_CENTERS),
+              job: pick(rng, JOBS),
+              phase: pick(rng, PHASES),
+              payType: pick(rng, PAY_TYPES),
+              creditCard: rng() < 0.5,
+              vendor: pick(rng, VENDORS),
+              category: cat.name,
+              glCode: cat.gl,
+              invoiceNumber: bucket.reportId
+                ? `${bucket.reportId}-INV`
+                : `INV${100000 + Math.floor(rng() * 900000)}`,
+              totalCost: Math.round((15 + rng() * 900) * 100) / 100,
+              comment: pick(rng, COMMENTS),
+              status,
+              reportId: bucket.reportId ?? undefined,
+              reportTitle: bucket.title ?? undefined,
+            })
+          }
+        }
+      })
     }
   }
 
