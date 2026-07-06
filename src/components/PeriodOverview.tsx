@@ -45,16 +45,20 @@ export default function PeriodOverview({
       <div className="overview__toolbar">
         <div className="overview__years" role="group" aria-label="Select year">
           <ModusWcButtonGroup>
-            {years.map((year) => (
-              <ModusWcButton
-                key={year}
-                color={year === selectedYear ? 'primary' : 'secondary'}
-                variant={year === selectedYear ? 'filled' : 'outlined'}
-                onButtonClick={() => onSelectYear(year)}
-              >
-                {year}
-              </ModusWcButton>
-            ))}
+            {years.map((year) => {
+              const selected = year === selectedYear
+              return (
+                <ModusWcButton
+                  key={year}
+                  color={selected ? 'primary' : 'secondary'}
+                  variant={selected ? 'filled' : 'outlined'}
+                  customClass={selected ? 'year-btn year-btn--selected' : 'year-btn'}
+                  onButtonClick={() => onSelectYear(year)}
+                >
+                  {year}
+                </ModusWcButton>
+              )
+            })}
           </ModusWcButtonGroup>
         </div>
 

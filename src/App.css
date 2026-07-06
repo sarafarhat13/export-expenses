@@ -63,6 +63,26 @@
   margin-bottom: 0.5rem;
 }
 
+/* Year selector: dark grey borders, blue for the selected year. */
+.overview__years .year-btn {
+  border-color: var(--neutral-700);
+}
+
+.overview__years .year-btn:not(.year-btn--selected) {
+  color: var(--neutral-700);
+}
+
+.overview__years .year-btn:not(.year-btn--selected):hover {
+  border-color: var(--neutral-900);
+  background-color: var(--neutral-100);
+}
+
+.overview__years .year-btn--selected {
+  border-color: var(--primary-600);
+  background-color: var(--primary-600);
+  color: #fff;
+}
+
 .overview__stats {
   display: flex;
   align-items: center;
