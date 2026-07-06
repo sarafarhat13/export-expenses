@@ -78,9 +78,9 @@
 }
 
 .overview__years .year-btn--selected {
-  border-color: var(--primary-600);
-  background-color: var(--primary-600);
-  color: #fff;
+  border-color: var(--modus-wc-color-primary);
+  background-color: var(--modus-wc-color-primary);
+  color: var(--modus-wc-color-primary-content);
 }
 
 .overview__stats {
