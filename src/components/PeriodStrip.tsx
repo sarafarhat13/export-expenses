@@ -1,7 +1,6 @@
 import { ModusWcIcon } from '@trimble-oss/moduswebcomponents-react'
 import MonthTile from './MonthTile'
 import {
-  formatCurrency,
   monthLabel,
   type ExportStatus,
   type PeriodSummary,
@@ -17,8 +16,10 @@ export interface OlderSummary {
 export interface RecentTile {
   year: number
   month: number
-  /** Pending summary for this tab; undefined means the month is fully done. */
+  /** Figures to display (pending for the tab, or exported when completed). */
   summary?: PeriodSummary
+  /** True when this month has no pending expenses left (fully exported). */
+  completed?: boolean
 }
 
 interface Props {
@@ -115,9 +116,6 @@ export default function PeriodStrip({
                       {older.monthCount}{' '}
                       {older.monthCount === 1 ? 'month' : 'months'}
                     </span>
-                    <span className="month-tile__total">
-                      {formatCurrency(older.totalCost)}
-                    </span>
                   </div>
                 </>
               ) : (
@@ -138,6 +136,7 @@ export default function PeriodStrip({
             month={t.month}
             monthLabel={monthLabel(t.month)}
             summary={t.summary}
+            completed={t.completed}
             selected={t.year === selectedYear && t.month === selectedMonth}
             onOpen={onSelectMonth}
           />

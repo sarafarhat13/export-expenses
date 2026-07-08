@@ -303,9 +303,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Keep a constant header height across every card (plain title, title with
+     an icon, or title with the checkmark badge) so the count and meta rows
+     line up across all tiles. */
+  min-height: 28px;
 }
 
 .month-tile__month {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-weight: 600;
   color: var(--neutral-700);
 }
@@ -346,8 +353,9 @@
   color: var(--modus-wc-color-warning, var(--warning-500, #f59e0b));
 }
 
-/* Exported months read as "done": blue count + checkmark badge. */
-.month-tile--exported.month-tile--active .month-tile__count-num {
+/* Done months (exported, or fully-exported in the Ready tab) read as
+   complete: blue count + checkmark badge on the standard white card. */
+.month-tile--done.month-tile--active .month-tile__count-num {
   color: var(--primary-600);
 }
 
@@ -391,11 +399,6 @@
 
 .month-tile__meta-item--muted {
   color: var(--neutral-400);
-}
-
-.month-tile__total {
-  font-weight: 700;
-  color: var(--neutral-900);
 }
 
 /* ---- Empty state ---- */

@@ -17,7 +17,6 @@ import {
   getAllPeriods,
   type ExportStatus,
   type Period,
-  type PeriodSummary,
 } from './data/expenses'
 import './App.css'
 
@@ -68,12 +67,6 @@ export default function App() {
   const [selection, setSelection] = useState<Selection | null>(null)
   const [olderModalOpen, setOlderModalOpen] = useState(false)
 
-  const summaryByKey = useMemo(() => {
-    const m = new Map<string, PeriodSummary>()
-    for (const s of summaries[status]) m.set(`${s.year}-${s.month}`, s)
-    return m
-  }, [summaries, status])
-
   const sortedPending = useMemo(
     () =>
       [...summaries[status]].sort(
@@ -83,20 +76,34 @@ export default function App() {
   )
 
   // Recent tiles: for the Ready tab we show the most recent calendar months so
-  // a fully-exported month still appears (as a "completed" tile). For the
-  // Exported tab we just show the most recent months with exported records.
+  // a fully-exported month still appears (as a "completed" tile that still
+  // shows its exported counts). For the Exported tab we just show the most
+  // recent months with exported records.
   const recentTiles = useMemo<RecentTile[]>(() => {
     if (status === 'ready') {
-      return allPeriods.slice(-RECENT_TILE_COUNT).map((p) => ({
-        year: p.year,
-        month: p.month,
-        summary: summaryByKey.get(`${p.year}-${p.month}`),
-      }))
+      const readyByKey = new Map(
+        summaries.ready.map((s) => [`${s.year}-${s.month}`, s]),
+      )
+      const exportedByKey = new Map(
+        summaries.exported.map((s) => [`${s.year}-${s.month}`, s]),
+      )
+      return allPeriods.slice(-RECENT_TILE_COUNT).map((p) => {
+        const key = `${p.year}-${p.month}`
+        const ready = readyByKey.get(key)
+        if (ready) return { year: p.year, month: p.month, summary: ready }
+        // No pending expenses left: show the exported figures as a done tile.
+        return {
+          year: p.year,
+          month: p.month,
+          summary: exportedByKey.get(key),
+          completed: true,
+        }
+      })
     }
     return sortedPending
       .slice(-RECENT_TILE_COUNT)
       .map((s) => ({ year: s.year, month: s.month, summary: s }))
-  }, [status, allPeriods, summaryByKey, sortedPending])
+  }, [status, allPeriods, summaries, sortedPending])
 
   const recentKeys = useMemo(
     () => new Set(recentTiles.map((t) => `${t.year}-${t.month}`)),
