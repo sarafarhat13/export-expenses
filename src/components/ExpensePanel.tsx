@@ -8,18 +8,18 @@ import {
   ModusWcCheckbox,
 } from '@trimble-oss/moduswebcomponents-react'
 import {
-  getExpensesForPeriod,
+  getExpensesForPeriods,
   monthLabel,
   formatCurrency,
   formatDate,
   type Expense,
   type ExportStatus,
+  type Period,
 } from '../data/expenses'
 
 interface Props {
   status: ExportStatus
-  year: number
-  month: number
+  periods: Period[]
 }
 
 interface SelectOption {
@@ -58,12 +58,24 @@ const COLUMN_HEADERS = [
 // One extra leading column for the selection checkbox.
 const COL_SPAN = COLUMN_HEADERS.length + 1
 
-export default function ExpensePanel({ status, year, month }: Props) {
+export default function ExpensePanel({ status, periods }: Props) {
   const isReady = status === 'ready'
 
+  // Stable key so the memo/effect deps don't churn on every render.
+  const periodsKey = useMemo(
+    () =>
+      [...periods]
+        .sort((a, b) => a.year - b.year || a.month - b.month)
+        .map((p) => `${p.year}-${p.month}`)
+        .join(','),
+    [periods],
+  )
+  const isSinglePeriod = periods.length === 1
+
   const allExpenses = useMemo(
-    () => getExpensesForPeriod(status, year, month),
-    [status, year, month],
+    () => getExpensesForPeriods(status, periods),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [status, periodsKey],
   )
 
   const [employeeFilter, setEmployeeFilter] = useState('')
@@ -91,13 +103,21 @@ export default function ExpensePanel({ status, year, month }: Props) {
   }, [allExpenses])
 
   const monthBounds = useMemo(() => {
-    const mm = String(month + 1).padStart(2, '0')
-    const lastDay = new Date(year, month + 1, 0).getDate()
+    if (periods.length === 0) return { min: undefined, max: undefined }
+    const sorted = [...periods].sort(
+      (a, b) => a.year - b.year || a.month - b.month,
+    )
+    const first = sorted[0]
+    const last = sorted[sorted.length - 1]
+    const lastDay = new Date(last.year, last.month + 1, 0).getDate()
     return {
-      min: `${year}-${mm}-01`,
-      max: `${year}-${mm}-${String(lastDay).padStart(2, '0')}`,
+      min: `${first.year}-${String(first.month + 1).padStart(2, '0')}-01`,
+      max: `${last.year}-${String(last.month + 1).padStart(2, '0')}-${String(
+        lastDay,
+      ).padStart(2, '0')}`,
     }
-  }, [year, month])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodsKey])
 
   const buildOptions = (values: string[], placeholder: string): SelectOption[] => [
     { label: placeholder, value: '' },
@@ -593,7 +613,9 @@ export default function ExpensePanel({ status, year, month }: Props) {
       {groups.length > 0 && (
         <div className="detail__grandtotal">
           <span>
-            Total for {monthLabel(month)} {year}
+            {isSinglePeriod
+              ? `Total for ${monthLabel(periods[0].month)} ${periods[0].year}`
+              : `Total for ${periods.length} selected months`}
           </span>
           <span className="detail__grandtotal-value">
             {formatCurrency(filtered.reduce((s, e) => s + e.totalCost, 0))}

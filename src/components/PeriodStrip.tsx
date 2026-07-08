@@ -1,32 +1,52 @@
-import { useMemo } from 'react'
+import { ModusWcIcon } from '@trimble-oss/moduswebcomponents-react'
 import MonthTile from './MonthTile'
-import { getPeriodSummaries, monthLabel, type ExportStatus } from '../data/expenses'
+import {
+  formatCurrency,
+  monthLabel,
+  type ExportStatus,
+  type PeriodSummary,
+} from '../data/expenses'
+
+export interface OlderSummary {
+  monthCount: number
+  expenseCount: number
+  employeeCount: number
+  totalCost: number
+}
+
+export interface RecentTile {
+  year: number
+  month: number
+  /** Pending summary for this tab; undefined means the month is fully done. */
+  summary?: PeriodSummary
+}
 
 interface Props {
   status: ExportStatus
+  /** The most recent periods shown as individual tiles (ascending order). */
+  recent: RecentTile[]
+  /** Aggregate of everything older than the recent tiles, or null when none. */
+  older: OlderSummary | null
   selectedYear: number | null
   selectedMonth: number | null
+  olderActive: boolean
   onSelectMonth: (year: number, month: number) => void
+  onOpenOlder: () => void
 }
 
 export default function PeriodStrip({
   status,
+  recent,
+  older,
   selectedYear,
   selectedMonth,
+  olderActive,
   onSelectMonth,
+  onOpenOlder,
 }: Props) {
-  const summaries = useMemo(() => getPeriodSummaries(status), [status])
+  const verb = status === 'ready' ? 'ready' : 'exported'
 
-  // The four most recent periods that have expenses (across year boundaries).
-  const periods = useMemo(
-    () =>
-      [...summaries]
-        .sort((a, b) => a.year - b.year || a.month - b.month)
-        .slice(-4),
-    [summaries],
-  )
-
-  if (periods.length === 0) {
+  if (recent.length === 0 && !older) {
     return (
       <div className="period-strip">
         <div className="period-strip__empty">
@@ -36,18 +56,84 @@ export default function PeriodStrip({
     )
   }
 
+  const olderHasExpenses = (older?.expenseCount ?? 0) > 0
+
+  const openOlder = () => {
+    if (olderHasExpenses) onOpenOlder()
+  }
+
   return (
     <div className="period-strip">
       <div className="period-strip__tiles">
-        {periods.map((p) => (
+        {older && (
+          <div
+            className={`month-tile ${
+              olderHasExpenses ? 'month-tile--active' : 'month-tile--empty'
+            } month-tile--older ${olderActive ? 'month-tile--selected' : ''}`}
+            role="button"
+            tabIndex={olderHasExpenses ? 0 : -1}
+            aria-disabled={!olderHasExpenses}
+            aria-pressed={olderActive}
+            aria-label={`Older months: ${older.expenseCount} expenses ${verb} across ${older.monthCount} months`}
+            onClick={openOlder}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                openOlder()
+              }
+            }}
+          >
+            <div className="month-tile__card">
+              <div className="month-tile__head">
+                <span className="month-tile__month">
+                  <ModusWcIcon decorative name="history" size="sm" />
+                  Older months
+                </span>
+              </div>
+
+              {olderHasExpenses ? (
+                <>
+                  <div className="month-tile__count">
+                    <span className="month-tile__count-num">
+                      {older.expenseCount}
+                    </span>
+                    <span className="month-tile__count-lbl">
+                      {older.expenseCount === 1
+                        ? `expense ${verb}`
+                        : `expenses ${verb}`}
+                    </span>
+                  </div>
+
+                  <div className="month-tile__meta">
+                    <span className="month-tile__meta-item">
+                      <ModusWcIcon decorative name="calendar_event" size="xs" />
+                      {older.monthCount}{' '}
+                      {older.monthCount === 1 ? 'month' : 'months'}
+                    </span>
+                    <span className="month-tile__total">
+                      {formatCurrency(older.totalCost)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="month-tile__done">
+                  <ModusWcIcon decorative name="check_circle" size="lg" />
+                  <span>All exported</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {recent.map((t) => (
           <MonthTile
-            key={`${p.year}-${p.month}`}
+            key={`${t.year}-${t.month}`}
             status={status}
-            year={p.year}
-            month={p.month}
-            monthLabel={monthLabel(p.month)}
-            summary={p}
-            selected={p.year === selectedYear && p.month === selectedMonth}
+            year={t.year}
+            month={t.month}
+            monthLabel={monthLabel(t.month)}
+            summary={t.summary}
+            selected={t.year === selectedYear && t.month === selectedMonth}
             onOpen={onSelectMonth}
           />
         ))}

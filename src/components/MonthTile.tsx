@@ -1,4 +1,4 @@
-import { ModusWcCard, ModusWcIcon } from '@trimble-oss/moduswebcomponents-react'
+import { ModusWcIcon } from '@trimble-oss/moduswebcomponents-react'
 import { formatCurrency, type ExportStatus, type PeriodSummary } from '../data/expenses'
 
 interface Props {
@@ -46,37 +46,35 @@ export default function MonthTile({
         }
       }}
     >
-      <ModusWcCard bordered customClass="month-tile__card">
+      <div className="month-tile__card">
         <div className="month-tile__head">
           <span className="month-tile__month">{monthLabel}</span>
-          {!hasExpenses && (
-            <ModusWcIcon decorative name="check_circle" size="sm" customClass="month-tile__done" />
-          )}
         </div>
 
-        <div className="month-tile__count">
-          <span className="month-tile__count-num">{count}</span>
-          <span className="month-tile__count-lbl">
-            {count === 1 ? `expense ${verb}` : `expenses ${verb}`}
-          </span>
-        </div>
+        {hasExpenses ? (
+          <>
+            <div className="month-tile__count">
+              <span className="month-tile__count-num">{count}</span>
+              <span className="month-tile__count-lbl">
+                {count === 1 ? `expense ${verb}` : `expenses ${verb}`}
+              </span>
+            </div>
 
-        <div className="month-tile__meta">
-          {hasExpenses ? (
-            <>
+            <div className="month-tile__meta">
               <span className="month-tile__meta-item">
                 <ModusWcIcon decorative name="person" size="xs" />
                 {summary?.employeeCount} {summary?.employeeCount === 1 ? 'employee' : 'employees'}
               </span>
               <span className="month-tile__total">{formatCurrency(summary?.totalCost ?? 0)}</span>
-            </>
-          ) : (
-            <span className="month-tile__meta-item month-tile__meta-item--muted">
-              Nothing to export
-            </span>
-          )}
-        </div>
-      </ModusWcCard>
+            </div>
+          </>
+        ) : (
+          <div className="month-tile__done">
+            <ModusWcIcon decorative name="check_circle" size="lg" />
+            <span>All exported</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

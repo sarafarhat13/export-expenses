@@ -32,6 +32,12 @@ export interface Expense {
   reportTitle?: string
 }
 
+export interface Period {
+  year: number
+  /** 0-11 */
+  month: number
+}
+
 export interface PeriodSummary {
   year: number
   /** 0-11 */
@@ -143,7 +149,10 @@ function buildExpenses(): Expense[] {
       if (count === 0) continue
 
       const exportedPeriod =
-        year < 2025 || (year === 2025 && month < 6)
+        year < 2025 ||
+        (year === 2025 && month < 6) ||
+        // October 2026 is fully exported so it demos the "All exported" tile.
+        (year === 2026 && month === 9)
       const status: ExportStatus = exportedPeriod ? 'exported' : 'ready'
 
       // Spread the month's expenses across a subset of employees.
@@ -267,6 +276,23 @@ export function getPeriodSummaries(status: ExportStatus): PeriodSummary[] {
   }))
 }
 
+/** Every calendar period (year/month) that has any expense, sorted ascending. */
+export function getAllPeriods(): Period[] {
+  const seen = new Set<string>()
+  const out: Period[] = []
+  for (const exp of ALL_EXPENSES) {
+    const [y, m] = exp.date.split('-')
+    const year = Number(y)
+    const month = Number(m) - 1
+    const key = `${year}-${month}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      out.push({ year, month })
+    }
+  }
+  return out.sort((a, b) => a.year - b.year || a.month - b.month)
+}
+
 export function getAvailableYears(status: ExportStatus): number[] {
   const years = new Set<number>()
   for (const exp of ALL_EXPENSES) {
@@ -308,6 +334,20 @@ export function getExpensesForPeriod(
     if (exp.status !== status) return false
     const [y, m] = exp.date.split('-')
     return Number(y) === year && Number(m) - 1 === month
+  })
+}
+
+/** Lazily fetch the full rows for a set of periods (used for the "older" bundle). */
+export function getExpensesForPeriods(
+  status: ExportStatus,
+  periods: Period[],
+): Expense[] {
+  const keys = new Set(periods.map((p) => `${p.year}-${p.month}`))
+  if (keys.size === 0) return []
+  return ALL_EXPENSES.filter((exp) => {
+    if (exp.status !== status) return false
+    const [y, m] = exp.date.split('-')
+    return keys.has(`${Number(y)}-${Number(m) - 1}`)
   })
 }
 
