@@ -346,6 +346,28 @@
   color: var(--modus-wc-color-warning, var(--warning-500, #f59e0b));
 }
 
+/* Exported months read as "done": blue count + checkmark badge. */
+.month-tile--exported.month-tile--active .month-tile__count-num {
+  color: var(--primary-600);
+}
+
+.month-tile__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 1px solid var(--primary-200, #bae6fd);
+  background: #ffffff;
+  color: var(--primary-600);
+}
+
+.month-tile__badge modus-wc-icon {
+  color: var(--primary-600);
+}
+
 .month-tile__count-lbl {
   font-size: 0.8rem;
   color: var(--neutral-500);

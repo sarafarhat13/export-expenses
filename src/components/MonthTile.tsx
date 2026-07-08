@@ -22,6 +22,7 @@ export default function MonthTile({
 }: Props) {
   const count = summary?.expenseCount ?? 0
   const hasExpenses = count > 0
+  const isExported = status === 'exported'
   const verb = status === 'ready' ? 'ready' : 'exported'
 
   const open = () => {
@@ -30,9 +31,9 @@ export default function MonthTile({
 
   return (
     <div
-      className={`month-tile ${hasExpenses ? 'month-tile--active' : 'month-tile--empty'} ${
-        selected ? 'month-tile--selected' : ''
-      }`}
+      className={`month-tile month-tile--${status} ${
+        hasExpenses ? 'month-tile--active' : 'month-tile--empty'
+      } ${selected ? 'month-tile--selected' : ''}`}
       role="button"
       tabIndex={hasExpenses ? 0 : -1}
       aria-disabled={!hasExpenses}
@@ -49,6 +50,11 @@ export default function MonthTile({
       <div className="month-tile__card">
         <div className="month-tile__head">
           <span className="month-tile__month">{monthLabel}</span>
+          {isExported && hasExpenses && (
+            <span className="month-tile__badge" aria-hidden="true">
+              <ModusWcIcon decorative name="check" size="xs" />
+            </span>
+          )}
         </div>
 
         {hasExpenses ? (

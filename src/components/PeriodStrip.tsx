@@ -67,7 +67,7 @@ export default function PeriodStrip({
       <div className="period-strip__tiles">
         {older && (
           <div
-            className={`month-tile ${
+            className={`month-tile month-tile--${status} ${
               olderHasExpenses ? 'month-tile--active' : 'month-tile--empty'
             } month-tile--older ${olderActive ? 'month-tile--selected' : ''}`}
             role="button"
@@ -89,6 +89,11 @@ export default function PeriodStrip({
                   <ModusWcIcon decorative name="history" size="sm" />
                   Older months
                 </span>
+                {status === 'exported' && olderHasExpenses && (
+                  <span className="month-tile__badge" aria-hidden="true">
+                    <ModusWcIcon decorative name="check" size="xs" />
+                  </span>
+                )}
               </div>
 
               {olderHasExpenses ? (
