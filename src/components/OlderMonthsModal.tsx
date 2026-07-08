@@ -6,7 +6,6 @@ import {
   ModusWcBadge,
 } from '@trimble-oss/moduswebcomponents-react'
 import {
-  formatCurrency,
   monthLabel,
   type ExportStatus,
   type Period,
@@ -140,9 +139,6 @@ export default function OlderMonthsModal({
                       {p.expenseCount}
                     </ModusWcBadge>
                     expenses
-                  </span>
-                  <span className="omm__item-total">
-                    {formatCurrency(p.totalCost)}
                   </span>
                 </span>
               </li>
